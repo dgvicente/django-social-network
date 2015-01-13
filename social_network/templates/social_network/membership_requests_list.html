@@ -1,0 +1,65 @@
+{% load i18n %}
+{% load feed_tags %}
+{% load social_network_tags %}
+{% load static %}
+{% load thumbnail %}
+<div class="col-md-9">
+    <div class="widget widget-heading-simple widget-body-gray">
+        <div class="separator-line"></div>
+        <div class="widget-body list">
+            <ul class="list-unstyled">
+                {% for req in object_list %}
+                    <!-- List item -->
+                    <li style="height: auto !important; padding: 9px">
+                        <div class="row innerR " >
+                            <div class="col-md-1">
+                                <a href="{% url 'profile_view' req.requester.profile.current.pk %}">
+                                    {% if req.requester.profile.current.picture %}
+                                        {% with image=req.requester.profile.current.picture|thumbnailer %}
+                                            {% if image.avatar_medium %}
+                                                <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                     src="{{ image.avatar_medium.url }}" alt="Foto del Perfil"/>
+                                            {% else %}
+                                                {% thumbnail req.requester.profile.current.picture 60x60 crop=',0' as thumb %}
+                                                <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                     src="{{ thumb.url }}"
+                                                     alt="Foto del Perfil"/>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                             src="{% static 'img/avatar-51x51.jpg' %}"
+                                             alt="{% trans "Foto del Perfil" %}"/>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            <div class="col-md-10 margin-left-none padding-left-none">
+                                <div class="border-right" >
+                                    <p class="border-bottom">
+                                    <label class="">{{ req.requester|get_name }}</label><br>
+                                    {{ req.from_user.profile.current.municipality|default:'-' }}
+                                    </p>
+                                    <p class="text-muted">{{ req.message }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                {% if user|is_group_admin:group %}
+                                    <a href="{% url 'group_request_accept' pk=req.pk %}"
+                                       class="text-faded accept_request_link" data-toggle="tooltip"
+                                       data-original-title="Aceptar solicitud de membresía" data-placement="bottom"><i
+                                            class="fa fa-2x fa-check"></i></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </li>
+                    <!-- // List item END -->
+                {% empty %}
+                    <div class="center">
+                        {% trans "No hay solicitudes de membresía que mostrar." %}
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>

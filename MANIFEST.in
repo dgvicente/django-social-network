@@ -1,0 +1,5 @@
+include LICENSE AUTHORS.rst README.rst
+recursive-include social_network/templates *.html
+recursive-include social_network/static *
+recursive-include social_network/migrations *
+

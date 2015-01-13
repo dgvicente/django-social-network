@@ -1,0 +1,22 @@
+{% load social_network_tags %}
+{% load feed_tags %}
+{% load i18n %}
+
+{% if user|is_friends_with:profile_user %}
+    <span class="glyphicons ok_2 pull-right"><i></i>{% trans 'Usted y ' %}{{ profile_user|get_name }} {% trans 'son amigos' %}
+    </span>
+    <h3><a href="#">{{ profile_user|get_name }}</a></h3>
+{% elif request.user|has_requested_friendship:profile_user %}
+    <span class="glyphicons ok_2 pull-right"><i></i>{% trans 'Usted le ha solicitado amistad a ' %}{{ profile_user|get_name }}
+    </span>
+    <h3><a href="#">{{ profile_user|get_name }}</a></h3>
+{% elif profile_user|has_requested_friendship:request.user %}
+    <label class="glyphicons ok_2 pull-right"><i></i>{{ profile_user|get_name }} {% trans 'le ha solicitado amistad.' %}
+    </label>
+    <h3><a href="#">{{ profile_user|get_name }}</a></h3>
+{% else %}
+    <a href="{% url 'friend_request_create' receiver=profile_user.pk %}"
+       class="btn btn-primary btn-icon glyphicons ok_2 btn-sm pull-right show_modal"
+       data-container="#modal_add_friend_request"><i></i>{% trans 'Solicitar amistad' %}</a>
+    <h3><a href="#">{{ profile_user|get_name }}</a></h3>
+{% endif %}

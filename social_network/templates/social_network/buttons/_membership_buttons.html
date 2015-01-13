@@ -1,0 +1,22 @@
+{% load social_network_tags %}
+{% load i18n %}
+
+{% if not user|is_group_member:group %}
+    {% if group.closed %}
+        {% if user|has_requested_membership:group %}
+            <span class="glyphicons ok_2 pull-right"><i></i>
+                {% trans 'Usted ha solicitado membresía en este grupo' %}
+            </span>
+        {% else %}
+            <a href="{% url 'group_request_create' group=group.pk %}" data-container="#modal_group_request_create"
+               class="btn btn-primary btn-icon glyphicons ok_2 btn-sm pull-right show_modal">
+                <i></i>{% trans 'Solicitar entrada al grupo' %}
+            </a>
+        {% endif %}
+    {% else %}
+        <a id="grou_join_link" href="{% url 'group_join' group=group.pk %}"
+           class="btn btn-primary btn-icon glyphicons ok_2 btn-sm pull-right">
+            <i></i>{% trans 'Unirse al grupo' %}
+        </a>
+    {% endif %}
+{% endif %}

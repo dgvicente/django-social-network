@@ -1,0 +1,8 @@
+.widget-tabs .widget-head li a {
+    background-color: #F4F4F4;
+    padding-top: 5px !important;
+}
+.widget-tabs .widget-head li.active a{
+    background-color: #ea7924;
+    color: #ffffff !important;
+}

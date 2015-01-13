@@ -1,0 +1,177 @@
+{% load static %}
+{% load i18n %}
+{% load feed_tags %}
+{% load social_network_tags %}
+{% load thumbnail %}
+
+<div class="col-md-9">
+    <div class="widget widget-heading-simple widget-body-gray" {% if object_list|length > 0 %}data-toggle="collapse-widget"
+         data-collapse-closed="false"{% endif %}>
+        <div class="separator"></div>
+        <div class="widget-head">
+            <strong class="text-primary">{% trans 'Administradores' %} <label
+                    class="badge badge-primary">{{ object_list|length|add:1 }}</label></strong>
+        </div>
+        <div class="separator-line"></div>
+        <div class="widget-body list">
+            <ul class="list-unstyled">
+                 <li style="height: auto !important; padding: 9px">
+                    <div class="row innerR">
+
+                        <div class="col-md-1">
+                            <a href="{% url 'profile_view' creator.profile.current.pk %}">
+                                {% if creator.profile.current.picture %}
+                                    {% with image=creator.profile.current.picture|thumbnailer %}
+                                        {% if image.avatar_medium %}
+                                            <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                 src="{{ image.avatar_medium.url }}" alt="Foto del Perfil"/>
+                                        {% else %}
+                                            {% thumbnail creator.profile.current.picture 60x60 crop=',0' as thumb %}
+                                            <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                 src="{{ thumb.url }}"
+                                                 alt="Foto del Perfil"/>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                         src="{% static 'img/avatar-51x51.jpg' %}" alt="{% trans "Foto del Perfil" %}"/>
+                                {% endif %}
+                            </a>
+                        </div>
+                            <label class="label label-success pull-right">{% trans 'Creador' %}</label>
+                        <div class="col-md-11">
+                            <p class="pull-left">
+                                <label style="margin-top: 5px">{{ creator|get_name }}</label><br>
+                                {{ creator.profile.current.municipality|default:'-' }}
+                            </p>
+
+                            <div class="pull-right">
+                                {% if request.user != creator %}
+                                    <a href="{% url "new_user_message" pk=creator.pk %}" class="text-faded show_modal" data-toggle="tooltip" data-container="#modal_contact_someone"
+                                       data-original-title="Enviar mensaje" data-placement="bottom"><i
+                                            class="fa fa-2x fa-comment"></i></a>
+                                    <i>&MediumSpace;</i>
+                                {% endif %}
+{#                                <div class="glyphicons circle_plus"><i></i></div>#}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                 </li>
+                {% for admin in object_list %}
+                    <!-- List item -->
+                    <li style="height: auto !important; padding: 9px">
+                        <div class="row innerR">
+                            <div class="col-md-1">
+                                <a href="{% url 'profile_view' admin.profile.current.pk %}">
+                                    {% if admin.profile.current.picture %}
+                                        {% with image=admin.profile.current.picture|thumbnailer %}
+                                            {% if image.avatar_medium %}
+                                                <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                     src="{{ image.avatar_medium.url }}" alt="Foto del Perfil"/>
+                                            {% else %}
+                                                {% thumbnail admin.profile.current.picture 60x60 crop=',0' as thumb %}
+                                                <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                     src="{{ thumb.url }}"
+                                                     alt="Foto del Perfil"/>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                             src="{% static 'img/avatar-51x51.jpg' %}"
+                                             alt="{% trans "Foto del Perfil" %}"/>
+                                    {% endif %}
+                                </a>
+                            </div>
+
+                            <div class="col-md-11">
+                                <p class="pull-left">
+                                    <label style="margin-top: 5px">{{ admin|get_name }}</label><br>
+                                    {{ admin.profile.current.municipality|default:'-' }}
+                                </p>
+
+                                <div class="pull-right">
+                                    {% if request.user != admin %}
+                                        <a href="{% url "new_user_message" pk=admin.pk %}" class="text-faded show_modal" data-toggle="tooltip" data-container="#modal_contact_someone"
+                                       data-original-title="Enviar mensaje" data-placement="bottom"><i
+                                            class="fa fa-2x fa-comment"></i></a>
+                                    <i>&MediumSpace;</i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+
+                    </li>
+                    <!-- // List item END -->
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <!--MEMBERS-->
+    <div class="widget widget-body-white widget-heading-simple" {% if members|length > 1 %}data-toggle="collapse-widget"
+         data-collapse-closed="false"{% endif %}>
+        <div class="widget-head">
+            <strong>{% trans 'Miembros' %} <label class="badge">{{ members|length }}</label></strong>
+        </div>
+        <div class="widget-body list ">
+            <ul>
+                {% for member in members %}
+                <!-- List item -->
+                <li style="height: auto !important; padding: 9px">
+                    <div class="row innerR">
+                        <div class="col-md-1">
+                            <a href="{% url 'profile_view' member.profile.current.pk %}">
+                                {% if member.profile.current.picture %}
+                                        {% with image=member.profile.current.picture|thumbnailer %}
+                                            {% if image.avatar_medium %}
+                                                <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                     src="{{ image.avatar_medium.url }}" alt="Foto del Perfil"/>
+                                            {% else %}
+                                                {% thumbnail member.profile.current.picture 60x60 crop=',0' as thumb %}
+                                                <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                                     src="{{ thumb.url }}"
+                                                     alt="Foto del Perfil"/>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                             src="{% static 'img/avatar-51x51.jpg' %}"
+                                             alt="{% trans "Foto del Perfil" %}"/>
+                                    {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-md-11">
+                            <p class="pull-left">
+                                <label style="margin-top: 5px">{{ member|get_name }}</label><br>
+                                {{ member.profile.current.municipality|default:'-'  }}
+                            </p>
+
+                            <div class="pull-right">
+                                {% if request.user != member %}
+                                <a href="{% url "new_user_message" pk=member.pk %}" class="text-faded show_modal" data-toggle="tooltip" data-container="#modal_contact_someone"
+                                       data-original-title="Enviar mensaje" data-placement="bottom"><i
+                                            class="fa fa-2x fa-comment"></i></a>
+                                    <i>&MediumSpace;</i>
+                                {% endif %}
+                                {% if not request.user|is_friends_with:member and request.user != member %}
+                                <a href="{% url 'friend_request_create' receiver=member.pk %}"
+                                   class="text-faded show_modal" data-toggle="tooltip"
+                                   data-container="#modal_add_friend_request"
+                                   data-original-title="{% trans 'Enviar solicitud de amistad' %}" data-placement="bottom"><i
+                                        class="fa fa-2x fa-location-arrow"></i></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+
+                </li>
+                {% endfor %}
+                <!-- // List item END -->
+            </ul>
+        </div>
+    </div>
+</div>
+<!--for collapsible-->
+<script src="{% static "vendors/components/modules/admin/widgets/widget-collapsible/assets/widget-collapsible.init.js" %}"></script>

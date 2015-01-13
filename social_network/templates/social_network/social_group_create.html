@@ -1,0 +1,94 @@
+{% load i18n widget_tweaks %}
+<!-- Modal -->
+
+<div class="modal-dialog ">
+    <div class="modal-content">
+
+        <!-- Modal heading -->
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="modal-title"><strong>{% trans 'Crear nuevo grupo' %}</strong></h3>
+        </div>
+        <!-- // Modal heading END -->
+
+        <!-- Modal body -->
+        <form id="group_create_form" class="form-horizontal" method="post" data-submit-response="html"
+              action="{% url 'social_group_create' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% render_field form.creator %}
+            <div class="modal-body">
+                <div class="row">
+
+                    <div class="form-group margin-left-none col-md-12">
+                        <div class="input-group col-md-12 padding-none-LR">
+                            <label class="padding-left-none control-label" for="id_name">{% trans 'Nombre del grupo' %}</label>
+                            {% trans "Escriba aquí el nombre del grupo" as namePH %}
+                            {% render_field form.name class+="form-control required" placeholder=namePH %}
+                        </div>
+                        {% include "errors/_error_list.html" with errors=form.name.errors only %}
+                    </div>
+
+                    <div class="form-group margin-left-none col-md-12">
+                        {% trans "Introduzca los detalles y descripción del grupo" as descriptionPH %}
+                        <div class="input-group col-md-12 margin-left-none padding-none-LR">
+                            <label class="control-label" for="id_description">{% trans 'Descripción' %}</label>
+                            {% render_field form.description class+="form-control required" placeholder=descriptionPH rows=2 %}
+                        </div>
+                        {% include "errors/_error_list.html" with errors=form.description.errors only %}
+                    </div>
+                    <div class="form-group margin-left-none col-md-12  margin-right-none">
+                        {% trans "Entre los nombres de usuario de los administradores del grupo" as adminsPH %}
+                        <label for="id_administrators" class="control-label">{% trans "Administradores del grupo" %}:</label>
+                        <div class="input-group col-md-12 margin-left-none padding-none-LR">
+                            {% render_field form.administrators class+="form-control" placeholder=adminsPH %}
+                        </div>
+                        {% include "errors/_error_list.html" with errors=form.administrators.errors only %}
+                    </div>
+
+                    <div class="form-group col-md-12 margin-left-none">
+                        <label class="top control-label" for="id_image">{% trans 'Foto del grupo' %}</label>
+
+                        <div class="fileupload fileupload-new margin-none col-md-12 padding-none-LR" data-provides="fileupload">
+                            <div class="input-group">
+                                <div class="form-control col-md-3">
+                                    <i class="fa fa-file fileupload-exists"></i>
+                                    <span class="fileupload-preview"></span>
+                                </div>
+                                <span class="input-group-btn">
+                                    <span class="btn btn-default btn-file">
+                                        <span class="fileupload-new">{% trans 'Seleccionar' %}</span>
+                                        <span class="fileupload-exists">{% trans 'Cambiar' %}</span>
+                                        {% render_field form.image class+="required"%}
+                                    </span>
+                                    <a href="#" class="btn fileupload-exists" data-dismiss="fileupload">{% trans 'Limpiar' %}</a>
+                                </span>
+                            </div>
+                        </div>
+                        {% include "errors/_error_list.html" with errors=form.image.errors only %}
+                    </div>
+
+                    <div class="clearfix"></div>
+                    <div class="uniformjs col-md-12">
+                        <label class="checkbox  padding-top-none">
+                            {% render_field form.closed %} {% trans 'Deseo que este grupo sea cerrado' %}
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- // Modal body END -->
+
+            <!-- Modal footer -->
+            <div class="modal-footer ">
+                <a href="#" class="btn btn-default" data-dismiss="modal">{% trans 'Cerrar' %}</a>
+                <a href="#" class="btn btn-info submit-modal-form">{% trans 'Crear nuevo grupo' %}</a>
+            </div>
+            <!-- // Modal footer END -->
+
+        </form>
+    </div>
+</div>
+
+<!-- // Modal END -->
+{#<div class="modal-dialog ">#}
