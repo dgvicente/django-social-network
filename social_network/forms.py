@@ -1,13 +1,13 @@
 # coding=utf-8
 from django import forms
-from django.contrib.auth.models import User
 from django.forms import widgets
 from django_select2 import AutoModelSelect2TagField
+from . import Manager
 from .models import FriendRequest, SocialGroup, GroupComment, GroupMembershipRequest, GroupImage, FeedComment
 
 
 class MultipleUsersField(AutoModelSelect2TagField):
-    queryset = User.objects
+    queryset = Manager
     search_fields = ['username__icontains', ]
 
     def get_model_field_values(self, value):

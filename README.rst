@@ -10,7 +10,13 @@ Changelog
 =========
 
 
-0.0.1
+0.1.1
+-----
+
+- Adding functionality to django user model, changed urls and views accordingly.
+- js functionality for toggle relationships
+
+0.1.0
 -----
 
 -First Commit

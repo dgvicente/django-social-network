@@ -1,17 +1,26 @@
 # coding=utf-8
 from django.conf.urls import patterns, url
-from .views import (FriendRequestCreateView,
-                    FriendRequestListView,
-                    AcceptFriendRequestView,
-                    SocialGroupDetailView,
-                    SocialGroupCreateView,
-                    GroupCommentCreateView,
-                    SocialGroupRequestCreateView,
-                    SocialGroupMembershipRequestsList,
-                    SocialGroupRequestAcceptView,
-                    GroupPhotoCreateView,
-                    SocialGroupJoinView,
-                    SocialGroupMembersList, SocialGroupUserList, FriendshipButtonsTemplateView, MembershipButtonsTemplateView, FeedCommentCreateView, FollowerRelationshipCreateView, FollowerRelationshipDestroyView)
+from .views import (
+    FriendRequestCreateView,
+    FriendRequestListView,
+    AcceptFriendRequestView,
+    SocialGroupDetailView,
+    SocialGroupCreateView,
+    GroupCommentCreateView,
+    SocialGroupRequestCreateView,
+    SocialGroupMembershipRequestsList,
+    SocialGroupRequestAcceptView,
+    GroupPhotoCreateView,
+    SocialGroupJoinView,
+    SocialGroupMembersList,
+    SocialGroupUserList,
+    FriendshipButtonsTemplateView,
+    MembershipButtonsTemplateView,
+    FeedCommentCreateView,
+    FollowerRelationshipToggleView,
+    FollowerRelationshipCreateView,
+    FollowerRelationshipDestroyView
+)
 
 urlpatterns = patterns(
     '',
@@ -79,6 +88,12 @@ urlpatterns = patterns(
         r'^user/comment/(?P<receiver>\d+)/$',
         FeedCommentCreateView.as_view(),
         name="profile_comment_create"
+    ),
+
+    url(
+        r'^user/toggle_follow/$',
+        FollowerRelationshipToggleView.as_view(),
+        name="toggle_follower_relationship"
     ),
 
     url(

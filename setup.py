@@ -6,7 +6,7 @@ setup(
     url="http://github.com/diana-gv/django-social-network/",
     author="Diana Garcia Vicente",
     author_email="dianagv@gmail.com",
-    version="0.1",
+    version="0.1.1",
     packages=["social_network", "social_network.templatetags", "social_network.migrations", "social_network.management",
               "social_network.management.commands"],
     include_package_data=True,

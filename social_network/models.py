@@ -1,13 +1,15 @@
 #coding: utf-8
+from django.contrib.auth import get_user_model
 from django.contrib.sites.managers import CurrentSiteManager
 from django.contrib.sites.models import Site
 from django.db import models
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from notifications.models import Event, NotificationTemplateConfig
 from social_graph import Graph
 from .utils import integrated_by_edge, member_of_edge, generate_sha1
+
+User = get_user_model()
 
 
 class FriendRequest(models.Model):

@@ -1,13 +1,15 @@
 import json
-from django.contrib.auth.models import User
+import logging
 from django.contrib.sites.models import Site
 from django.http import HttpResponse
 from django.http.response import HttpResponseBadRequest
 from django.utils.encoding import force_text
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic import CreateView, ListView, View, DetailView, TemplateView
 from social_graph import Graph
+from .utils import intmin
 
-from . import SERVER_SUCCESS_MESSAGE
+from . import SERVER_SUCCESS_MESSAGE, User, Manager
 from .models import FriendRequest, SocialGroup, GroupComment, GroupMembershipRequest, GroupImage, FeedComment
 from .forms import (FriendRequestForm,
                     SocialGroupForm,
@@ -15,17 +17,20 @@ from .forms import (FriendRequestForm,
                     GroupMembershipRequestForm,
                     GroupPhotoForm,
                     FeedCommentForm)
-from .signals import (friend_request_created,
-                      friendship_created,
-                      social_group_created,
-                      social_group_comment_created,
-                      social_group_membership_request_created,
-                      social_group_member_added,
-                      social_group_photo_created,
-                      feed_comment_created,
-                      follower_relationship_created,
-                      follower_relationship_destroyed)
-from .utils import friendship_edge, member_of_edge, integrated_by_edge, follower_of_edge
+from .signals import (
+    friend_request_created,
+    friendship_created,
+    social_group_created,
+    social_group_comment_created,
+    social_group_membership_request_created,
+    social_group_member_added,
+    social_group_photo_created,
+    feed_comment_created,
+)
+from .utils import friendship_edge, member_of_edge, integrated_by_edge
+
+
+logger = logging.getLogger(__name__)
 
 
 class FriendRequestCreateView(CreateView):
@@ -43,7 +48,7 @@ class FriendRequestCreateView(CreateView):
         kwargs = super(FriendRequestCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'from_user': self.request.user,
-            'to_user': User.objects.get(pk=self.kwargs['receiver']),
+            'to_user': Manager.get(pk=self.kwargs['receiver']),
         }
         return kwargs
 
@@ -66,7 +71,7 @@ class FriendRequestListView(ListView):
         context = super(FriendRequestListView, self).get_context_data(**kwargs)
         graph = Graph()
         edge = friendship_edge()
-        user = User.objects.get(pk=self.kwargs['receiver'])
+        user = Manager.get(pk=self.kwargs['receiver'])
         count = graph.edge_count(user, edge)
         friends_list = [
             user for user, attributes, time in graph.edge_range(user, edge, 0, count)
@@ -99,7 +104,7 @@ class FriendshipButtonsTemplateView(TemplateView):
         context = super(FriendshipButtonsTemplateView, self).get_context_data(**kwargs)
         context.update({
             'user': self.request.user,
-            'profile_user': User.objects.get(pk=self.kwargs['profile'])
+            'profile_user': Manager.get(pk=self.kwargs['profile'])
         })
         return context
 
@@ -138,7 +143,7 @@ class SocialGroupUserList(ListView):
 
         graph = Graph()
         edge = member_of_edge()
-        user = User.objects.get(pk=self.kwargs['user'])
+        user = Manager.get(pk=self.kwargs['user'])
         count = graph.edge_count(user, edge)
         group_member_list = [
             user for user, attributes, time in graph.edge_range(user, edge, 0, count)
@@ -339,7 +344,7 @@ class FeedCommentCreateView(CreateView):
     def get_form_kwargs(self):
         kwargs = super(CreateView, self).get_form_kwargs()
         kwargs['initial'] = {
-            'receiver': User.objects.get(pk=self.kwargs['receiver']),
+            'receiver': Manager.get(pk=self.kwargs['receiver']),
             'creator': self.request.user
         }
         return kwargs
@@ -353,15 +358,68 @@ class FeedCommentCreateView(CreateView):
         }), status=201, content_type='application/json')
 
 
-class FollowerRelationshipCreateView(View):
+class JSONResponseMixin(object):
+    """
+    A mixin that can be used to render a JSON response.
+    """
+    response_class = HttpResponse
+
+    def render_to_response(self, context, **response_kwargs):
+        """
+        Returns a JSON response, transforming 'context' to make the payload.
+        """
+        response_kwargs['content_type'] = 'application/json'
+        return self.response_class(
+            self.convert_context_to_json(context),
+            **response_kwargs
+        )
+
+    def convert_context_to_json(self, context):
+        "Convert the context dictionary into a JSON object"
+        # Note: This is *EXTREMELY* naive; in reality, you'll need
+        # to do much more complex handling to ensure that arbitrary
+        # objects -- such as Django model instances or querysets
+        # -- can be serialized as JSON.
+        return json.dumps(context)
+
+
+class FollowerRelationshipToggleView(JSONResponseMixin, View):
+
     def post(self, request, *args, **kwargs):
         try:
-            graph = Graph()
-            edge = follower_of_edge()
-            followed = User.objects.get(pk=kwargs['followed'])
-            graph.edge(self.request.user, followed, edge, Site.objects.get_current())
-            #TODO Check the sender
-            follower_relationship_created.send(sender=User, instance=followed, user=self.request.user)
+            pk = request.POST['pk']
+            user = Manager.get(pk=pk)
+
+            if user.followed_by(request.user):
+                request.user.stop_following(user)
+                tooltip = _(u"Follow")
+                toggle_status = False
+            else:
+                request.user.follow(user)
+                tooltip = _(u"Stop Following")
+                toggle_status = True
+
+            followers = user.followers()
+
+            return self.render_to_response({
+                'result': True,
+                'toggle_status': toggle_status,
+                'counter': followers,
+                'counterStr': intmin(followers),
+                'tooltip': force_text(tooltip)
+            })
+
+        except Exception as e:
+            logger.exception(e)
+            return self.render_to_response({'result': False})
+
+
+class FollowerRelationshipCreateView(View):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user = Manager.get(pk=kwargs['followed'])
+            request.user.follow(user)
             return HttpResponse(json.dumps({
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
             }), status=201, content_type='application/json')
@@ -370,14 +428,11 @@ class FollowerRelationshipCreateView(View):
 
 
 class FollowerRelationshipDestroyView(View):
+
     def post(self, request, *args, **kwargs):
         try:
-            graph = Graph()
-            edge = follower_of_edge()
-            unfollowed = User.objects.get(pk=kwargs['followed'])
-            graph.no_edge(self.request.user, unfollowed, edge, Site.objects.get_current())
-            #TODO Check the sender
-            follower_relationship_destroyed.send(sender=User, instance=unfollowed, user=self.request.user)
+            user = Manager.get(pk=kwargs['followed'])
+            request.user.stop_following(user)
             return HttpResponse(json.dumps({
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
             }), status=201, content_type='application/json')

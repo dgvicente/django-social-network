@@ -7,6 +7,17 @@ from ..utils import get_user_friends_count, users_are_friends, user_is_follower_
 register = template.Library()
 
 #--------------------------------------FOLLOWER TAGS---------------------------------------------
+
+@register.filter
+def followed_by(user1, user2):
+    """
+    Returns whether user1 is followed by user2 or not.
+    """
+    if user2.is_anonymous() or not user1:
+        return False
+    return user1.followed_by(user2)
+
+
 @register.filter
 def is_follower_of(user1, user2):
     """
