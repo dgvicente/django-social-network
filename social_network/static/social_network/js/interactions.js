@@ -12,18 +12,18 @@ function iClazz(SuperClass, methods) {
     return subClass;
 }
 
-var UserInteraction = iClazz(Object, {
+var SocialInteraction = iClazz(Object, {
     config: function(options) {},
 
     init: function() {}
 });
 
 
-var ToggleUserInteraction = iClazz(UserInteraction, {
+var ToggleSocialInteraction = iClazz(SocialInteraction, {
 
     config: function(options) {
         this.options = {
-            selector: '.toggle_user_relationship',
+            selector: '.toggle_social_relationship',
             eventType: 'click',
             container: $('body')
         };
@@ -78,4 +78,29 @@ var ToggleUserInteraction = iClazz(UserInteraction, {
     },
 
     error: function(response, status, xhr, context) {}
+});
+
+var FormSocialInteraction = iClazz(SocialInteraction, {
+
+    config: function(options) {
+        this.options = {
+            selector: '',
+            eventType: ''
+        };
+
+        if (typeof options == 'object') $.extend(this.options, options);
+
+        this.init();
+    },
+
+    init: function() {
+        var eventTrigger = $(this.options.selector).first(),
+            $class = this;
+
+        eventTrigger.on(this.options.eventType, function() {
+            $class.eventImpl(eventTrigger);
+        })
+    },
+
+    eventImpl: function(eventTrigger) {}
 });

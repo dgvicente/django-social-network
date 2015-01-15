@@ -9,6 +9,10 @@ Allows to create a basic social network including friendship and social group dy
 Changelog
 =========
 
+0.2.0
+-----
+
+- General refactoring to get more instinctive usage.
 
 0.1.1
 -----

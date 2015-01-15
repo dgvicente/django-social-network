@@ -1,0 +1,106 @@
+{% load i18n %}
+{% load static %}
+{% load social_network_tags %}
+
+<div class="separator"></div>
+{% if user.pk == owner %}
+    <div class="innerLR">
+        <a href="{% url 'social_group_create' %}"
+           class="pull-right text-primary show_modal"
+           data-container="#modal_add_social_group">{% trans 'New Group' %}
+        </a>
+    </div>
+{% endif %}
+<div class="clearfix"></div>
+<!-- MY GROUPS-->
+<div class="widget widget-body-white widget-heading-simple"
+     {% if object_list|length > 0 %}data-toggle="collapse-widget" data-collapse-closed="false"{% endif %}>
+    <div class="widget-head">
+        <strong class="text-primary">
+            {% trans 'Groups' %} <label class="badge badge-primary">{{ object_list|length }}</label>
+        </strong>
+    </div>
+    {% for group in object_list %}
+        <div class="">
+            <div class="widget-body padding-bottom-none padding-none-LR">
+                <span class="pull-right glyphicons {% if group.closed %}lock{% else %}unlock{% endif %} group-lock"><i></i></span>
+                <div class="col-md-1 ">
+                    <div class="widget widget-pinterest border-none">
+                        <a href="{% url 'social_group_details' pk=group.pk %}" data-toggle="modal"
+                           class="widget-body padding-none">
+                            {% trans 'Group Picture' as group_picture_alt %}
+                            {% if group.image %}
+                                <img class="cp-carousel-catalog-image" src="{{ group.image.avatar_large.url }}" alt="{{ group_picture_alt }}"/>
+                            {% else %}
+                                <img class="cp-carousel-catalog-image" src="{% static 'social_network/img/group.jpeg' %}" alt="{{ group_picture_alt }}"/>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-11">
+                    <h4 class="border-bottom">
+                        <a href="{% url 'social_group_details' pk=group.pk %}">{{ group.name }}</a>
+                         [{{ group|relationship_with:owner }} ]
+                    </h4>
+                    <p>{{ group.description }}</p>
+                </div>
+                <div class="clearfix"></div>
+                <div class="separator-line"></div>
+                {% with group.members as members_count %}
+                    {% if members_count > 0 %}
+                        <div class="col-md-12 innerB">
+                            {% if members_count > 6 %}
+                                <h5 class="col-md-12 padding-none-LR text-muted">
+                                    {% blocktrans %}
+                                        Members (displaying 6 of {{ members_count }})
+                                    {% endblocktrans %}
+                                </h5>
+                            {% else %}
+                                <h5 class="col-md-12 padding-none-LR text-muted">
+                                    {% blocktrans %}
+                                        Members (displaying {{ members_count}} of {{ members_count }})
+                                    {% endblocktrans %}
+                                </h5>
+                            {% endif %}
+                            {% for member in group.member_list %}
+                                <div class="col-md-2 padding-none-LR separator top ">
+                                    <a href="{{ member.profile.get_absolute_url }}">
+                                        <span class="col-md-2 padding-none-LR">
+                                            {% trans "Profile Picture" as profile_picture_alt %}
+                                             {% if member.profile.picture %}
+                                                 <img class="img-responsive"
+                                                      src="{{ member.profile.picture.url }}" alt="{{ profile_picture_alt }}"/>
+                                             {% else %}
+                                                 <img class="img-responsive"
+                                                      src="{% static 'social_network/img/group.jpeg' %}"
+                                                      alt="{{ profile_picture_alt }}"/>
+                                             {% endif %}
+                                        </span>
+                                        <span class="text-muted col-md-10 ">
+                                            {{ member.get_full_name }}<br>
+                                        </span>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                            <div class="clearfix"></div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                <div class="col-md-12 innerB">
+                    <div class="pull-right"><a
+                            href="{% url 'social_group_details' pk=group.pk %}">{% trans 'See more details...' %}</a>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="center">
+            {% trans "There are no group to show..." %}
+        </div>
+    {% endfor %}
+</div>
+<!-- END MY GROUPS-->
+
+<!--for collapsible-->
+<script src="{% static "vendors/components/modules/admin/widgets/widget-collapsible/assets/widget-collapsible.init.js" %}"></script>

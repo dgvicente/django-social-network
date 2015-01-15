@@ -1,0 +1,81 @@
+{% load static %}
+{% load i18n %}
+{% load social_network_tags %}
+
+<!--Custom CSS-->
+<link rel="stylesheet" href="{% static 'social_network/css/styles.css' %}"/>
+
+<div id="landing_2">
+    <!-- Special Offers Widget -->
+    <div class="widget widget-heading-simple widget-body-gray widget-offers margin-bottom-none">
+        <div class="widget-body" style="border-bottom: solid 2px #EA7924">
+            <!-- Media item -->
+            <div class="row innerT">
+                <div class="col-md-1">
+                    {% trans 'Group Image' as group_image_alt %}
+                    {% if group.image %}
+                        <img class="thumb hidden-tablet hidden-phone img-responsive"
+                             src="{{ group.image.avatar_large.url }}" alt="{{ group_image_alt }}"/>
+                    {% else %}
+                        <img class="thumb hidden-tablet hidden-phone img-responsive"
+                             src="{% static 'social_network/img/group.jpeg' %}" alt="{{ group_image_alt }}"/>
+                    {% endif %}
+                </div>
+                <div class="col-md-11">
+                    <div id="buttonsContainer" data-url="{% url 'social_group_membership_buttons' group=group.pk %}">
+                        {% include 'social_network/buttons/_membership_buttons.html' %}
+                    </div>
+                    <h3><a href="">{{ group.name }}</a></h3>
+                    <p class="col-md-10 padding-left-none">{{ group.description }}</p>
+                </div>
+
+            </div>
+            <!-- // Media item END -->
+
+        </div>
+
+    </div>
+    <!-- // Special Offers Widget END -->
+    <div class="widget widget-tabs widget-quick">
+        {% has_admin group user as is_admin %}
+        <!--TABS------>
+        <div class="widget-head">
+            <ul id="detailTabs">
+                <li><a class="btn btn-default border-none" href="#feedTab"
+                       data-toggle="tab">{% trans "Wall" %}</a>
+                </li>
+                <li><a class="btn btn-default border-none" href="#membersTab"
+                       data-toggle="tab">{% trans "Members" %}</a>
+                </li>
+                {% if is_admin and group.closed %}
+                    <li><a class="btn btn-default border-none" href="#membershipRequestsTab"
+                           data-toggle="tab">{% trans "Membership Requests" %}</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="tab-content">
+            <div class="tab-pane fade" id="feedTab" data-repeat-request="true"
+                 data-url="{% url "social_group_feed" group=group.pk %}"
+                 data-callback-params="#feedTab">
+            </div>
+            <div id="membersTab" class="tab-pane fade" data-repeat-request="true"
+                 data-url="{% url 'social_group_members_list' group=group.pk %}"
+                 data-callback-params="#membersTab">
+            </div>
+            {% if is_admin and group.closed %}
+                <div id="membershipRequestsTab" class="tab-pane fade" data-repeat-request="true"
+                     data-url="{% url 'social_group_request_list' group=group.pk %}"
+                     data-callback-params="#membershipRequestsTab">
+                </div>
+            {% endif %}
+        </div>
+        <!--END TABS------>
+    </div>
+
+
+</div>
+<!-- // Content END -->
+
+{% include  'social_network/interactions/_modal_interactions.html' %}
+<script src="{% static 'social_network/js/group_details.js' %}"></script>

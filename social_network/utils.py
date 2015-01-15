@@ -3,12 +3,40 @@ import random
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
-from social_graph import Graph, EdgeType
+from notifications.models import EventType
+from social_graph import EdgeType
 
 try:
     from hashlib import sha1 as sha_constructor, md5 as md5_constructor
 except ImportError:
     pass
+
+
+#---------------------NOTIFICATIONS---------------------------------
+def group_comment_event_type():
+    comment_event_type = cache.get('SOCIAL_NETWORK_COMMENT_EVENT_TYPE')
+    if comment_event_type is not None:
+        return comment_event_type
+    try:
+        from . import SOCIAL_GROUP_COMMENT_EVENT_TYPE_NAME
+        comment_event_type = EventType.objects.get(name=SOCIAL_GROUP_COMMENT_EVENT_TYPE_NAME)
+        cache.set('SOCIAL_NETWORK_COMMENT_EVENT_TYPE', comment_event_type)
+        return comment_event_type
+    except ObjectDoesNotExist as e:
+        pass  # TODO Log this
+
+
+def group_photo_event_type():
+    photo_event_type = cache.get('SOCIAL_NETWORK_PHOTO_EVENT_TYPE')
+    if photo_event_type is not None:
+        return photo_event_type
+    try:
+        from . import SOCIAL_GROUP_PHOTO_EVENT_TYPE_NAME
+        photo_event_type = EventType.objects.get(name=SOCIAL_GROUP_PHOTO_EVENT_TYPE_NAME)
+        cache.set('SOCIAL_NETWORK_COMMENT_EVENT_TYPE', photo_event_type)
+        return photo_event_type
+    except ObjectDoesNotExist as e:
+        pass  # TODO Log this
 
 
 #---------------------EDGES-----------------------------------------
@@ -71,69 +99,9 @@ def followed_by_edge():
     except ObjectDoesNotExist:
         pass
 
-
-#---------------------FRIENDSHIP-----------------------------------------
-def get_user_friends(user):
-    graph = Graph()
-    edge = friendship_edge()
-    count = graph.edge_count(user, edge)
-    return [
-        friend for friend, attributes, time in
-        graph.edge_range(user, edge, 0, count)]
-
-
-def get_user_friends_count(user):
-    graph = Graph()
-    edge = friendship_edge()
-    return graph.edge_count(user, edge)
-
-
-def users_are_friends(user1, user2):
-    if not user1 or not user2:
-        return False
-    graph = Graph()
-    edge = friendship_edge()
-    return graph.edge_get(user1, edge, user2) is not None
-
-
-#---------------------FOLLOWERS-----------------------------------------
-def user_is_follower_of(user1, user2):
-    graph = Graph()
-    edge = follower_of_edge()
-    return graph.edge_get(user1, edge, user2) is not None
-
-
-def user_followers(user):
-    graph = Graph()
-    edge = followed_by_edge()
-    count = graph.edge_count(user, edge)
-    return [
-        follower for follower, attributes, time in
-        graph.edge_range(user, edge, 0, count)]
-
-
-def user_followers_count(user):
-    graph = Graph()
-    edge = followed_by_edge()
-    return graph.edge_count(user, edge)
-
-
-def user_followed_users(user):
-    graph = Graph()
-    edge = follower_of_edge()
-    count = graph.edge_count(user, edge)
-    return [
-        followed for followed, attributes, time in
-        graph.edge_range(user, edge, 0, count)]
-
-
-def user_followed_users_count(user):
-    graph = Graph()
-    edge = follower_of_edge()
-    return graph.edge_count(user, edge)
-
-
 #---------------------GENERAL-----------------------------------------
+
+
 def generate_sha1(string, salt=None):
     """
     Generates a sha1 hash for supplied string. Doesn't need to be very secure
@@ -158,6 +126,7 @@ def generate_sha1(string, salt=None):
     hash = sha_constructor(salt+string).hexdigest()
 
     return (salt, hash)
+
 
 # A tuple of standard large number to their converters
 intword_converters = (
@@ -185,5 +154,3 @@ def intmin(value):
             tpl = "+%s" if value > large_number else "%s"
             return tpl % converter(new_value) % {'value': new_value}
     return value
-
-

@@ -6,93 +6,121 @@ from django.http.response import HttpResponseBadRequest
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import CreateView, ListView, View, DetailView, TemplateView
-from social_graph import Graph
+from . import SERVER_SUCCESS_MESSAGE, User, Manager, SERVER_ERROR_MESSAGE
 from .utils import intmin
-
-from . import SERVER_SUCCESS_MESSAGE, User, Manager
-from .models import FriendRequest, SocialGroup, GroupComment, GroupMembershipRequest, GroupImage, FeedComment
-from .forms import (FriendRequestForm,
-                    SocialGroupForm,
-                    GroupCommentForm,
-                    GroupMembershipRequestForm,
-                    GroupPhotoForm,
-                    FeedCommentForm)
-from .signals import (
-    friend_request_created,
-    friendship_created,
-    social_group_created,
-    social_group_comment_created,
-    social_group_membership_request_created,
-    social_group_member_added,
-    social_group_photo_created,
-    feed_comment_created,
+from .models import FriendRequest, SocialGroup, GroupMembershipRequest, GroupFeedItem
+from .forms import (
+    FriendRequestForm,
+    SocialGroupForm,
+    GroupCommentForm,
+    GroupMembershipRequestForm,
+    GroupPhotoForm,
+    FeedCommentForm
 )
-from .utils import friendship_edge, member_of_edge, integrated_by_edge
-
 
 logger = logging.getLogger(__name__)
 
 
-class FriendRequestCreateView(CreateView):
+class JSONResponseEnabledMixin(object):
+    """
+    A mixin that can be used to render a JSON response.
+    """
+    json_response_class = HttpResponse
+    json_enabled_methods = ['post']
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method.lower() in self.json_enabled_methods:
+            self.json_enabled = True
+        else:
+            self.json_enabled = False
+        return super(JSONResponseEnabledMixin, self).dispatch(request, *args, **kwargs)
+
+    def render_to_json(self, context, **response_kwargs):
+        """
+        Returns a JSON response, transforming 'context' to make the payload.
+        """
+        response_kwargs['content_type'] = 'application/json'
+        return self.json_response_class(
+            json.dumps(context),
+            **response_kwargs
+        )
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.json_enabled:
+            return self.render_to_json(context, **response_kwargs)
+        else:
+            return super(JSONResponseEnabledMixin, self).render_to_response(context, **response_kwargs)
+
+
+class BaseFriendRequestCreateView(CreateView):
     form_class = FriendRequestForm
-    template_name = 'social_network/friend_request_create.html'
+    template_name = 'social_network/friend/request.html'
 
     def get_context_data(self, **kwargs):
-        context = super(FriendRequestCreateView, self).get_context_data(**kwargs)
+        context = super(BaseFriendRequestCreateView, self).get_context_data(**kwargs)
         context.update({
             'receiver': self.kwargs['receiver']
         })
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(FriendRequestCreateView, self).get_form_kwargs()
+        kwargs = super(BaseFriendRequestCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'from_user': self.request.user,
             'to_user': Manager.get(pk=self.kwargs['receiver']),
         }
         return kwargs
 
+
+class FriendRequestCreateView(JSONResponseEnabledMixin, BaseFriendRequestCreateView):
+
     def form_valid(self, form):
         self.object = form.save()
-        friend_request_created.send(sender=FriendRequest, user=self.request.user, instance=self.object)
-        return HttpResponse(json.dumps({
+        return self.render_to_json({
             'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }), status=201, content_type='application/json')
+        }, status=201)
 
 
 class FriendRequestListView(ListView):
-    template_name = 'social_network/friends_list.html'
+    template_name = 'social_network/friend/list/main.html'
 
     def get_queryset(self):
         self.queryset = FriendRequest.objects.filter(to_user__pk=self.kwargs['receiver'], accepted=False)
-        return self.queryset
+        return super(FriendRequestListView, self).get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super(FriendRequestListView, self).get_context_data(**kwargs)
-        graph = Graph()
-        edge = friendship_edge()
         user = Manager.get(pk=self.kwargs['receiver'])
-        count = graph.edge_count(user, edge)
-        friends_list = [
-            user for user, attributes, time in graph.edge_range(user, edge, 0, count)
-        ]
-        context['friends'] = list(set(friends_list))
+        context.update({
+            'friends': user.friend_list()
+        })
         return context
 
 
-class AcceptFriendRequestView(View):
+class AcceptFriendRequestView(JSONResponseEnabledMixin, View):
+
     def post(self, request, *args, **kwargs):
         try:
-            friend_request = FriendRequest.objects.get(pk=kwargs['pk'])
-            friend_request.accepted = True
-            friend_request.save()
-            graph = Graph()
-            edge = friendship_edge()
-            graph.edge(friend_request.from_user, friend_request.to_user, edge, Site.objects.get_current())
-            friendship_created.send(sender=FriendRequest, instance=friend_request, user=friend_request.to_user)
-            return HttpResponse(json.dumps({
+            FriendRequest.objects.get(pk=kwargs['pk']).accept(self.request.user)
+            return self.render_to_json({
+                'result': True,
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-            }), status=201, content_type='application/json')
+            })
+        except (FriendRequest.DoesNotExist, Exception) as e:
+            return HttpResponseBadRequest()
+
+
+class DenyFriendRequestView(JSONResponseEnabledMixin, View):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            result = FriendRequest.objects.get(pk=kwargs['pk']).deny(self.request.user)
+            if not result:
+                raise
+            return self.render_to_json({
+                'result': result,
+                'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
+            })
         except (FriendRequest.DoesNotExist, Exception) as e:
             return HttpResponseBadRequest()
 
@@ -103,216 +131,234 @@ class FriendshipButtonsTemplateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(FriendshipButtonsTemplateView, self).get_context_data(**kwargs)
         context.update({
-            'user': self.request.user,
             'profile_user': Manager.get(pk=self.kwargs['profile'])
         })
         return context
 
 
-class SocialGroupCreateView(CreateView):
+class SocialGroupListView(ListView):
+    template_name = 'social_network/group/detail/members.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        self.queryset = SocialGroup.on_site.all()
+        return super(SocialGroupListView, self).get_queryset()
+
+
+class BaseSocialGroupCreateView(CreateView):
     form_class = SocialGroupForm
-    template_name = 'social_network/social_group_create.html'
+    template_name = 'social_network/group/form.html'
 
     def get_form_kwargs(self):
-        kwargs = super(SocialGroupCreateView, self).get_form_kwargs()
+        kwargs = super(BaseSocialGroupCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'creator': self.request.user,
+            'site': Site.objects.get_current()
         }
         return kwargs
 
-    def post(self, request, *args, **kwargs):
-        return super(SocialGroupCreateView, self).post(request, *args, **kwargs)
+
+class SocialGroupCreateView(JSONResponseEnabledMixin, BaseSocialGroupCreateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        social_group_created.send(sender=SocialGroup, instance=self.object, user=self.request.user)
-        return HttpResponse(json.dumps({
+        return self.render_to_json({
+            'result': True,
             'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }), status=201, content_type='application/json')
+        }, status=201)
 
 
 class SocialGroupUserList(ListView):
-    template_name = 'social_network/user_group_list.html'
+    template_name = 'social_network/group/list/main.html'
 
     def get_queryset(self):
-        self.queryset = SocialGroup.objects.filter(creator__pk=self.kwargs['user'])
-        return self.queryset
+        self.queryset = SocialGroup.on_site.integrated_by(self.request.user)
+        return super(SocialGroupUserList, self).get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super(SocialGroupUserList, self).get_context_data(**kwargs)
-
-        graph = Graph()
-        edge = member_of_edge()
-        user = Manager.get(pk=self.kwargs['user'])
-        count = graph.edge_count(user, edge)
-        group_member_list = [
-            user for user, attributes, time in graph.edge_range(user, edge, 0, count)
-        ]
         context.update({
-            'group_member_list': group_member_list,
-            'owner': int(self.kwargs['user']),
-            'user': self.request.user
+            'owner': int(self.kwargs['user'])
         })
         return context
 
 
 class SocialGroupDetailView(DetailView):
     model = SocialGroup
-    template_name = 'social_network/social_group.html'
+    template_name = 'social_network/group/detail/main.html'
     context_object_name = 'group'
 
 
-class SocialGroupRequestCreateView(CreateView):
+class BaseSocialGroupRequestCreateView(CreateView):
     form_class = GroupMembershipRequestForm
-    template_name = 'social_network/group_request_create.html'
+    template_name = 'social_network/group/request.html'
 
     def get_context_data(self, **kwargs):
-        context = super(SocialGroupRequestCreateView, self).get_context_data(**kwargs)
+        context = super(BaseSocialGroupRequestCreateView, self).get_context_data(**kwargs)
         context.update({
             'group': self.kwargs['group']
         })
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(SocialGroupRequestCreateView, self).get_form_kwargs()
+        kwargs = super(BaseSocialGroupRequestCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'requester': self.request.user,
             'group': SocialGroup.objects.get(pk=self.kwargs['group'])
         }
         return kwargs
 
+
+class SocialGroupRequestCreateView(JSONResponseEnabledMixin, BaseSocialGroupRequestCreateView):
+
     def form_valid(self, form):
         self.object = form.save()
-        social_group_membership_request_created.send(sender=GroupMembershipRequest, instance=self.object,
-                                                     user=self.request.user)
-        return HttpResponse(json.dumps({
-            'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }), status=201, content_type='application/json')
+        return self.render_to_json({
+            'result': True,
+            'successMsg': force_text(SERVER_SUCCESS_MESSAGE),
+            'sentLabel': force_text(_(u"Solicitud Enviada"))
+        }, status=201)
 
 
-class SocialGroupRequestAcceptView(View):
+class SocialGroupRequestAcceptView(JSONResponseEnabledMixin, View):
     def post(self, request, *args, **kwargs):
         try:
-            membership_request = GroupMembershipRequest.objects.get(pk=kwargs['pk'])
-            membership_request.accepted = True
-            membership_request.save()
-            graph = Graph()
-            edge = member_of_edge()
-            graph.edge(membership_request.requester, membership_request.group, edge, Site.objects.get_current())
-            social_group_member_added.send(sender=SocialGroup, instance=membership_request.group,
-                                           user=membership_request.requester)
-            return HttpResponse(json.dumps({
+            result = GroupMembershipRequest.objects.get(pk=kwargs['pk']).accept(self.request.user)
+            if not result:
+                raise
+            return self.render_to_json({
+                'result': result,
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-            }), status=201, content_type='application/json')
+            })
         except (GroupMembershipRequest.DoesNotExist, Exception) as e:
             return HttpResponseBadRequest()
 
 
-class SocialGroupJoinView(View):
+class SocialGroupRequestDenyView(JSONResponseEnabledMixin, View):
     def post(self, request, *args, **kwargs):
         try:
-            graph = Graph()
-            edge = member_of_edge()
-            group = SocialGroup.objects.get(pk=kwargs['group'])
-            graph.edge(self.request.user, group, edge, Site.objects.get_current())
-            social_group_member_added.send(sender=SocialGroup, instance=group,
-                                           user=self.request.user)
-            return HttpResponse(json.dumps({
+            result = GroupMembershipRequest.objects.get(pk=kwargs['pk']).deny(self.request.user)
+            if not result:
+                raise
+            return self.render_to_json({
+                'result': result,
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-            }), status=201, content_type='application/json')
+            })
+        except (GroupMembershipRequest.DoesNotExist, Exception) as e:
+            return HttpResponseBadRequest()
+
+
+class SocialGroupJoinView(JSONResponseEnabledMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            result = self.request.user.join(SocialGroup.objects.get(pk=kwargs['group']))
+            if not result:
+                raise
+            return self.render_to_json({
+                'result': result,
+                'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
+            })
         except (SocialGroup.DoesNotExist, Exception) as e:
             return HttpResponseBadRequest()
 
 
-class GroupCommentCreateView(CreateView):
+class BaseGroupCommentCreateView(CreateView):
     form_class = GroupCommentForm
-    template_name = 'social_network/group_comment_create.html'
+    template_name = 'social_network/group/comment.html'
 
     def get_context_data(self, **kwargs):
-        context = super(GroupCommentCreateView, self).get_context_data(**kwargs)
+        context = super(BaseGroupCommentCreateView, self).get_context_data(**kwargs)
         context.update({
             'group': self.kwargs['group']
         })
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(GroupCommentCreateView, self).get_form_kwargs()
+        kwargs = super(BaseGroupCommentCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'creator': self.request.user,
             'group': SocialGroup.objects.get(pk=self.kwargs['group']),
         }
         return kwargs
 
+
+class GroupCommentCreateView(JSONResponseEnabledMixin, BaseGroupCommentCreateView):
+
     def form_valid(self, form):
         self.object = form.save()
-        social_group_comment_created.send(sender=GroupComment, user=self.request.user, instance=self.object)
-        return HttpResponse(json.dumps({
+        return self.render_to_json({
+            'result': True,
             'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }), status=201, content_type='application/json')
+        }, status=201)
 
 
-class GroupPhotoCreateView(CreateView):
+class BaseGroupPhotoCreateView(CreateView):
     form_class = GroupPhotoForm
-    template_name = 'social_network/group_photo_create.html'
+    template_name = 'social_network/group/photo.html'
 
     def get_context_data(self, **kwargs):
-        context = super(GroupPhotoCreateView, self).get_context_data(**kwargs)
+        context = super(BaseGroupPhotoCreateView, self).get_context_data(**kwargs)
         context.update({
             'group': self.kwargs['group']
         })
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(GroupPhotoCreateView, self).get_form_kwargs()
+        kwargs = super(BaseGroupPhotoCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'creator': self.request.user,
             'group': SocialGroup.objects.get(pk=self.kwargs['group']),
         }
         return kwargs
 
+
+class GroupPhotoCreateView(JSONResponseEnabledMixin, BaseGroupPhotoCreateView):
+
     def form_valid(self, form):
         self.object = form.save()
-        social_group_photo_created.send(sender=GroupImage, user=self.object.creator, instance=self.object)
-        return HttpResponse(json.dumps({
+        return self.render_to_json({
+            'result': True,
             'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }), status=201, content_type='application/json')
+        }, status=201)
+
+
+class SocialGroupFeedView(ListView):
+    template_name = 'social_network/group/detail/feed.html'
+
+    def get_queryset(self):
+        self.queryset = GroupFeedItem.on_site.filter(group=self.kwargs.get('group')).order_by('-event__date')
+        return super(SocialGroupFeedView, self).get_queryset()
 
 
 class SocialGroupMembershipRequestsList(ListView):
-    template_name = 'social_network/membership_requests_list.html'
+    template_name = 'social_network/group/detail/requests.html'
 
     def get_queryset(self):
-        self.queryset = GroupMembershipRequest.objects.filter(group__pk=self.kwargs['group'], accepted=False)
-        return self.queryset
+        self.queryset = GroupMembershipRequest.objects.filter(
+            group__pk=self.kwargs['group'],
+            accepted=False,
+            denied=False
+        )
+        return super(SocialGroupMembershipRequestsList, self).get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super(SocialGroupMembershipRequestsList, self).get_context_data(**kwargs)
-        context['user'] = self.request.user
         context['group'] = self.kwargs['group']
         return context
 
 
 class SocialGroupMembersList(ListView):
-    template_name = 'social_network/group_members_list.html'
+    template_name = 'social_network/group/detail/members.html'
 
     def get_queryset(self):
-        group = SocialGroup.objects.get(pk=self.kwargs['group'])
-        self.queryset = group.administrators.exclude(pk=group.creator.pk)
-        return self.queryset
+        self.group = SocialGroup.objects.get(pk=self.kwargs['group'])
+        self.queryset = Manager.filter(pk__in=[user.pk for user in self.group.member_list])
+        return super(SocialGroupMembersList, self).get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super(SocialGroupMembersList, self).get_context_data(**kwargs)
-
-        graph = Graph()
-        edge = integrated_by_edge()
-        group = SocialGroup.objects.get(pk=self.kwargs['group'])
-        count = graph.edge_count(group, edge)
-        members_list = [
-            user for user, attributes, time in graph.edge_range(group, edge, 0, count)
-        ]
         context.update({
-            'members': list(set(members_list)),
-            'creator': group.creator
+            'roles': self.group.member_role_list,
         })
 
         return context
@@ -324,66 +370,43 @@ class MembershipButtonsTemplateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(MembershipButtonsTemplateView, self).get_context_data(**kwargs)
         context.update({
-            'user': self.request.user,
             'group': SocialGroup.objects.get(pk=self.kwargs['group'])
         })
         return context
 
 
-class FeedCommentCreateView(CreateView):
-    template_name = 'social_network/feed_comment_create.html'
+class BaseFeedCommentCreateView(CreateView):
+    template_name = 'social_network/userfeed/comment.html'
     form_class = FeedCommentForm
 
     def get_context_data(self, **kwargs):
-        context = super(CreateView, self).get_context_data(**kwargs)
+        context = super(BaseFeedCommentCreateView, self).get_context_data(**kwargs)
         context.update({
             'receiver': self.kwargs['receiver']
         })
         return context
 
     def get_form_kwargs(self):
-        kwargs = super(CreateView, self).get_form_kwargs()
+        kwargs = super(BaseFeedCommentCreateView, self).get_form_kwargs()
         kwargs['initial'] = {
             'receiver': Manager.get(pk=self.kwargs['receiver']),
             'creator': self.request.user
         }
         return kwargs
 
+
+class FeedCommentCreateView(JSONResponseEnabledMixin, BaseFeedCommentCreateView):
+
     def form_valid(self, form):
         self.object = form.save()
-        feed_comment_created.send(sender=FeedComment, user=self.request.user, instance=self.object)
-        return HttpResponse(json.dumps({
+        return self.render_to_json({
+            'result': True,
             'comment_id': self.object.pk,
             'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }), status=201, content_type='application/json')
+        }, status=201)
 
 
-class JSONResponseMixin(object):
-    """
-    A mixin that can be used to render a JSON response.
-    """
-    response_class = HttpResponse
-
-    def render_to_response(self, context, **response_kwargs):
-        """
-        Returns a JSON response, transforming 'context' to make the payload.
-        """
-        response_kwargs['content_type'] = 'application/json'
-        return self.response_class(
-            self.convert_context_to_json(context),
-            **response_kwargs
-        )
-
-    def convert_context_to_json(self, context):
-        "Convert the context dictionary into a JSON object"
-        # Note: This is *EXTREMELY* naive; in reality, you'll need
-        # to do much more complex handling to ensure that arbitrary
-        # objects -- such as Django model instances or querysets
-        # -- can be serialized as JSON.
-        return json.dumps(context)
-
-
-class FollowerRelationshipToggleView(JSONResponseMixin, View):
+class FollowerRelationshipToggleView(JSONResponseEnabledMixin, View):
 
     def post(self, request, *args, **kwargs):
         try:
@@ -401,7 +424,7 @@ class FollowerRelationshipToggleView(JSONResponseMixin, View):
 
             followers = user.followers()
 
-            return self.render_to_response({
+            return self.render_to_json({
                 'result': True,
                 'toggle_status': toggle_status,
                 'counter': followers,
@@ -411,30 +434,30 @@ class FollowerRelationshipToggleView(JSONResponseMixin, View):
 
         except Exception as e:
             logger.exception(e)
-            return self.render_to_response({'result': False})
+            return self.render_to_json({'result': False})
 
 
-class FollowerRelationshipCreateView(View):
+class FollowerRelationshipCreateView(JSONResponseEnabledMixin, View):
 
     def post(self, request, *args, **kwargs):
         try:
-            user = Manager.get(pk=kwargs['followed'])
-            request.user.follow(user)
-            return HttpResponse(json.dumps({
+            request.user.follow(Manager.get(pk=kwargs['followed']))
+            return self.render_to_json({
+                'result': True,
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-            }), status=201, content_type='application/json')
+            }, status=201)
         except (User.DoesNotExist, Exception):
             return HttpResponseBadRequest()
 
 
-class FollowerRelationshipDestroyView(View):
+class FollowerRelationshipDestroyView(JSONResponseEnabledMixin, View):
 
     def post(self, request, *args, **kwargs):
         try:
-            user = Manager.get(pk=kwargs['followed'])
-            request.user.stop_following(user)
-            return HttpResponse(json.dumps({
+            request.user.stop_following(Manager.get(pk=kwargs['followed']))
+            return self.render_to_json({
+                'result': True,
                 'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-            }), status=201, content_type='application/json')
+            })
         except (User.DoesNotExist, Exception):
             return HttpResponseBadRequest()
