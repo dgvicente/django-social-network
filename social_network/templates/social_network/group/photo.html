@@ -1,6 +1,7 @@
 {% load i18n %}
-{% load static from staticfiles %}
+{% load static %}
 {% load widget_tweaks %}
+
 <form id="modal_group_photo_form" action="{% url 'social_group_photo_create' group=group %}" method="post" >
     {% csrf_token %}
     {% render_field form.creator %}
@@ -9,11 +10,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title"><i class="fa fa-camera fa-lg"></i>{% trans ' Comparta su foto' %}</h4>
+                    <h4 class="modal-title"><i class="fa fa-camera fa-lg"></i> {% trans 'Share a photo' %}</h4>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="top control-label" for="id_image">{% trans 'Imagen' %}</label>
+                        <label class="top control-label" for="id_image">{% trans 'Picture' %}</label>
                         <div class="fileupload fileupload-new margin-none col-md-12 padding-none-LR"
                              data-provides="fileupload">
                             <div class="input-group">
@@ -21,27 +22,27 @@
                                         class="fileupload-preview"></span></div>
                                 <span class="input-group-btn">
                                     <span class="btn btn-default btn-file">
-                                        <span class="fileupload-new">{% trans 'Seleccionar' %}</span>
-                                        <span class="fileupload-exists">{% trans 'Cambiar' %}</span>
+                                        <span class="fileupload-new">{% trans 'Select' %}</span>
+                                        <span class="fileupload-exists">{% trans 'Change' %}</span>
                                         {% render_field form.image accept+="image/*" class+="required" %}
                                     </span><a href="#" class="btn fileupload-exists"
-                                              data-dismiss="fileupload">{% trans 'Limpiar' %}</a>
+                                              data-dismiss="fileupload">{% trans 'Clean' %}</a>
                                 </span>
                             </div>
                         </div>
                     </div>
                     <div class="separator"></div>
                     <div class="form-group">
-                        {% trans "Escriba un comentario" as commentValuePH %}
+                        {% trans "Write your comment..." as commentValuePH %}
                         {% render_field form.comment rows=5 class="input-block-level form-control required" placeholder=commentValuePH %}
-                        {% include "errors/_error_list.html" with errors=form.comment.errors %}
+                        {% include "social_network/errors/_error_list.html" with errors=form.comment.errors %}
                     </div>
                 </div>
                 <div class="modal-footer">
                     <a href="#" class="btn btn-icon btn-default glyphicons circle_remove"
-                       data-dismiss="modal"><i></i>{% trans 'Cancelar' %}</a>
+                       data-dismiss="modal"><i></i>{% trans 'Cancel' %}</a>
                     <a id="btn_dialog_ok" href="#"
-                       class="btn btn-icon btn-primary glyphicons circle_ok submit-modal-form"><i></i>{% trans 'Enviar' %}</a>
+                       class="btn btn-icon btn-primary glyphicons circle_ok submit-modal-form"><i></i>{% trans 'Send' %}</a>
                 </div>
             </div>
         </div>

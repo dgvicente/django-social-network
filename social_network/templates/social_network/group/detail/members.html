@@ -1,0 +1,35 @@
+{% load static %}
+{% load i18n %}
+{% load social_network_tags %}
+
+<ul class="list-unstyled">
+    {% for member in object_list %}
+        <!-- List item -->
+        <li style="height: auto !important; padding: 9px">
+            <div class="row innerR">
+                <div class="col-md-1">
+                    <a href="{{ member.profile.get_absolute_url }}">
+                        {% trans "Profile Picture" as avatar_alt %}
+                        {% if member.profile.picture %}
+                            <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                 src="{{ member.profile.picture.url }}" alt="{{ avatar_alt }}"/>
+                        {% else %}
+                            <img class="thumb hidden-tablet hidden-phone img-responsive"
+                                 src="{% static 'social_network/img/group.jpeg' %}"
+                                 alt="{{ avatar_alt }}"/>
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="col-md-11">
+                    <p class="pull-left">
+                        <label style="margin-top: 5px">{{ member.get_full_name }}</label>
+                    </p>
+                    <div class="pull-right">
+                        {% render_user_rol member %}
+                    </div>
+                </div>
+            </div>
+        </li>
+        <!-- // List item END -->
+    {% endfor %}
+</ul>

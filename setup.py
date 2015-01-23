@@ -1,19 +1,17 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="django-social-network",
-    #url = "http://github.com/dgarciavicente/django-notifications/",
-    url="http://github.com/diana-gv/django-social-network/",
+    url="http://github.com/dgvicente/django-social-network/",
     author="Diana Garcia Vicente",
     author_email="dianagv@gmail.com",
-    version="0.1",
-    packages=["social_network", "social_network.templatetags", "social_network.migrations", "social_network.management",
-              "social_network.management.commands"],
+    version="0.2.0",
+    packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
     description="Social Network for Django",
-    install_requires=['django>=1.6.1', 'celery>=3.1.4', 'django-social-graph>=0.1.8', 'Django-Select2>=4.2.2',
-                      'django-notifications'],
+    install_requires=['django>=1.6.1', 'celery>=3.1.4', 'django-social-graph>=0.1.8',
+                      'django-notifications>=0.1.6'],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.6",
@@ -25,5 +23,4 @@ setup(
         "Environment :: Web Environment",
         "Framework :: Django",
     ],
-
 )

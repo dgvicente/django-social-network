@@ -9,8 +9,18 @@ Allows to create a basic social network including friendship and social group dy
 Changelog
 =========
 
+0.2.0
+-----
 
-0.0.1
+- General refactoring to get more instinctive usage.
+
+0.1.1
+-----
+
+- Adding functionality to django user model, changed urls and views accordingly.
+- js functionality for toggle relationships
+
+0.1.0
 -----
 
 -First Commit

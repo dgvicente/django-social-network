@@ -1,0 +1,330 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-22 17:54-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: __init__.py:29
+msgid "Your request has been successfully processed."
+msgstr "Su solicitud ha sido procesada exitosamente."
+
+#: __init__.py:30
+msgid "An error has occurred while processing your request'."
+msgstr "Ha ocurrido un error intentando procesar su solicitud."
+
+#: models.py:29 models.py:216
+msgid "Requester"
+msgstr "Solicitante"
+
+#: models.py:30
+msgid "Receiver"
+msgstr "Receptor"
+
+#: models.py:31 models.py:218
+msgid "Message"
+msgstr "Mensaje"
+
+#: models.py:32 models.py:219
+msgid "Accepted"
+msgstr "Acceptada"
+
+#: models.py:33 models.py:220
+msgid "Denied"
+msgstr "Rechazada"
+
+#: models.py:88 templatetags/social_network_tags.py:126
+msgid "Creator"
+msgstr "Creador"
+
+#: models.py:89 templates/social_network/group/form.html:25
+msgid "Name"
+msgstr "Nombre"
+
+#: models.py:90 templates/social_network/group/form.html:35
+msgid "Description"
+msgstr "Descripción"
+
+#: models.py:91
+msgid "Closed"
+msgstr "Cerrada"
+
+#: models.py:93 templates/social_network/group/form.html:42
+msgid "Administrators"
+msgstr "Administradores"
+
+#: models.py:104 models.py:293
+msgid "Image"
+msgstr "Imagen"
+
+#: models.py:217
+msgid "Group"
+msgstr "Grupo"
+
+#: models.py:222
+msgid "Decider"
+msgstr "Responsable de Decisión"
+
+#: models.py:283
+msgid "A comment has been posted in a group"
+msgstr "Se ha publicado un comentario en una comunidad"
+
+#: models.py:308
+msgid "A photo has been posted in a group"
+msgstr "Se ha publicado una imagen en una comunidad"
+
+#: utils.py:133
+#, python-format
+msgid "%(value)dK"
+msgstr ""
+
+#: utils.py:134
+#, python-format
+msgid "%(value)dM"
+msgstr ""
+
+#: utils.py:135
+#, python-format
+msgid "%(value)dG"
+msgstr ""
+
+#: views.py:219
+msgid "Solicitud Enviada"
+msgstr "Request Sent"
+
+#: views.py:418
+msgid "Follow"
+msgstr "Seguir"
+
+#: views.py:422
+msgid "Stop Following"
+msgstr "Dejar de Seguir"
+
+#: templates/social_network/buttons/_friendship_buttons.html:5
+msgid "You and "
+msgstr "Usted y "
+
+#: templates/social_network/buttons/_friendship_buttons.html:5
+msgid "are friends"
+msgstr "son amigos"
+
+#: templates/social_network/buttons/_friendship_buttons.html:8
+msgid "Friend request sent to "
+msgstr "Solicitud de amistad enviada a "
+
+#: templates/social_network/buttons/_friendship_buttons.html:11
+msgid "sent you a friend request."
+msgstr "le envió una solicitud de amistad."
+
+#: templates/social_network/buttons/_friendship_buttons.html:16
+msgid "Send Friend Request"
+msgstr "Enviar Solicitud de Amistad"
+
+#: templates/social_network/buttons/_membership_buttons.html:10
+msgid "Membership request sent to group"
+msgstr "Solicitud de membresía enviada a comunidad"
+
+#: templates/social_network/buttons/_membership_buttons.html:15
+#: templates/social_network/group/request.html:13
+msgid "Request Membership"
+msgstr "Solicitar Membresía"
+
+#: templates/social_network/buttons/_membership_buttons.html:21
+msgid "Join"
+msgstr "Unirse"
+
+#: templates/social_network/friend/request.html:13
+msgid "Request Friendship"
+msgstr "Solicitar Amistad"
+
+#: templates/social_network/friend/request.html:17
+#: templates/social_network/userfeed/comment.html:17
+msgid "Write your comment"
+msgstr "Escriba su comentario"
+
+#: templates/social_network/friend/request.html:24
+#: templates/social_network/group/comment.html:24
+#: templates/social_network/group/form.html:82
+#: templates/social_network/group/photo.html:43
+#: templates/social_network/group/request.html:24
+#: templates/social_network/userfeed/comment.html:24
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: templates/social_network/friend/request.html:26
+#: templates/social_network/group/comment.html:26
+#: templates/social_network/group/photo.html:45
+#: templates/social_network/group/request.html:26
+#: templates/social_network/userfeed/comment.html:26
+msgid "Send"
+msgstr "Enviar"
+
+#: templates/social_network/friend/list/main.html:11
+msgid "Friendship Requests"
+msgstr "Solicitudes de Amistad"
+
+#: templates/social_network/friend/list/main.html:23
+#: templates/social_network/friend/list/main.html:70
+#: templates/social_network/group/detail/members.html:12
+#: templates/social_network/group/detail/requests.html:16
+#: templates/social_network/group/list/main.html:69
+msgid "Profile Picture"
+msgstr "Foto de Perfil"
+
+#: templates/social_network/friend/list/main.html:60
+msgid "Friends"
+msgstr "Amigos"
+
+#: templates/social_network/group/comment.html:13
+#: templates/social_network/userfeed/comment.html:13
+msgid "Comment"
+msgstr "Comentar"
+
+#: templates/social_network/group/comment.html:17
+msgid "Write your comment here..."
+msgstr "Escriba su comentario aquí..."
+
+#: templates/social_network/group/form.html:11
+msgid "Create Group"
+msgstr "Crear Comunidad"
+
+#: templates/social_network/group/form.html:26
+msgid "Enter group name here..."
+msgstr "Entre el nombre de la comunidad aquí..."
+
+#: templates/social_network/group/form.html:33
+#, fuzzy
+msgid "Enter group description and details..."
+msgstr "Entre el nombre de la comunidad aquí..."
+
+#: templates/social_network/group/form.html:41
+msgid "Add group administrators (other than you)..."
+msgstr "Agregue administradores de la comunidad (además de usted)..."
+
+#: templates/social_network/group/form.html:50
+#: templates/social_network/group/list/main.html:31
+msgid "Group Picture"
+msgstr "Imagen de Comunidad"
+
+#: templates/social_network/group/form.html:60
+#: templates/social_network/group/photo.html:25
+msgid "Select"
+msgstr "Seleccionar"
+
+#: templates/social_network/group/form.html:61
+#: templates/social_network/group/photo.html:26
+msgid "Change"
+msgstr "Cambiar"
+
+#: templates/social_network/group/form.html:64
+#: templates/social_network/group/photo.html:29
+msgid "Clean"
+msgstr "Limpiar"
+
+#: templates/social_network/group/form.html:74
+msgid "I want this to be a closed group"
+msgstr "Quiero que sea una comunidad cerrada"
+
+#: templates/social_network/group/form.html:83
+msgid "Create"
+msgstr "Crear"
+
+#: templates/social_network/group/members_widget.html:4
+msgid "Group Members"
+msgstr "Miembros de la Comunidad"
+
+#: templates/social_network/group/photo.html:13
+msgid "Share a photo"
+msgstr "Compartir una foto"
+
+#: templates/social_network/group/photo.html:17
+msgid "Picture"
+msgstr "Imagen"
+
+#: templates/social_network/group/photo.html:36
+#: templates/social_network/group/request.html:17
+msgid "Write your comment..."
+msgstr "Escriba su comentario..."
+
+#: templates/social_network/group/detail/main.html:15
+msgid "Group Image"
+msgstr "Imagen de Comunidad"
+
+#: templates/social_network/group/detail/main.html:45
+msgid "Wall"
+msgstr "Muro"
+
+#: templates/social_network/group/detail/main.html:48
+msgid "Members"
+msgstr "Miembros"
+
+#: templates/social_network/group/detail/main.html:52
+msgid "Membership Requests"
+msgstr "Solicitudes de Membresía"
+
+#: templates/social_network/group/detail/requests.html:50
+msgid "There are no membership requests."
+msgstr "No hay solicitudes de membresía pendientes."
+
+#: templates/social_network/group/list/main.html:10
+msgid "New Group"
+msgstr "Nueva Comunidad"
+
+#: templates/social_network/group/list/main.html:20
+msgid "Groups"
+msgstr "Comunidades"
+
+#: templates/social_network/group/list/main.html:54
+#, python-format
+msgid ""
+"\n"
+"                                        Members (displaying 6 of "
+"%(members_count)s)\n"
+"                                    "
+msgstr ""
+"\n"
+"                                        Miembros (mostrando 6 de "
+"%(members_count)s)\n"
+"                                    "
+
+#: templates/social_network/group/list/main.html:60
+#, python-format
+msgid ""
+"\n"
+"                                        Members (displaying "
+"%(members_count)s of %(members_count)s)\n"
+"                                    "
+msgstr ""
+"\n"
+"                                        Miembros (mostrando "
+"%(members_count)s de %(members_count)s)\n"
+"                                    "
+
+#: templates/social_network/group/list/main.html:91
+msgid "See more details..."
+msgstr "Ver más detalles..."
+
+#: templates/social_network/group/list/main.html:99
+msgid "There are no group to show..."
+msgstr "No hay comunidades que mostrar..."
+
+#: templatetags/social_network_tags.py:127
+msgid "Administrator"
+msgstr "Administrador"
+
+#: templatetags/social_network_tags.py:128
+msgid "Member"
+msgstr "Miembro"

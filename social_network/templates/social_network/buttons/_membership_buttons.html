@@ -1,22 +1,24 @@
 {% load social_network_tags %}
 {% load i18n %}
 
-{% if not user|is_group_member:group %}
+{% is_group_member user group as is_member %}
+{% if not is_member %}
     {% if group.closed %}
-        {% if user|has_requested_membership:group %}
+        {% has_requested_membership user group as membership_req %}
+        {% if membership_req %}
             <span class="glyphicons ok_2 pull-right"><i></i>
-                {% trans 'Usted ha solicitado membresía en este grupo' %}
+                {% trans 'Membership request sent to group' %}
             </span>
         {% else %}
-            <a href="{% url 'group_request_create' group=group.pk %}" data-container="#modal_group_request_create"
+            <a href="{% url 'social_group_request_create' group=group.pk %}" data-container="#modal_group_request_create"
                class="btn btn-primary btn-icon glyphicons ok_2 btn-sm pull-right show_modal">
-                <i></i>{% trans 'Solicitar entrada al grupo' %}
+                <i></i>{% trans 'Request Membership' %}
             </a>
         {% endif %}
     {% else %}
-        <a id="grou_join_link" href="{% url 'group_join' group=group.pk %}"
+        <a id="group_join_link" href="{% url 'social_group_join' group=group.pk %}"
            class="btn btn-primary btn-icon glyphicons ok_2 btn-sm pull-right">
-            <i></i>{% trans 'Unirse al grupo' %}
+            <i></i>{% trans 'Join' %}
         </a>
     {% endif %}
 {% endif %}
