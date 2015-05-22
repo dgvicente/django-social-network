@@ -33,8 +33,7 @@ SERVER_ERROR_MESSAGE = _(u"An error has occurred while processing your request'.
 
 ##---------------------------------Inject functionality to Django User model---------------------------###
 def get_site(self):
-    profile = getattr(self, 'profile', None)
-    return getattr(profile, 'site', Site.objects.get_current()) if profile else Site.objects.get_current()
+    return Site.objects.get_current()
 
 setattr(User, 'get_site', get_site)
 

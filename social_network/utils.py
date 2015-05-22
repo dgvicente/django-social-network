@@ -46,7 +46,7 @@ def group_photo_event_type():
     try:
         from . import SOCIAL_GROUP_PHOTO_EVENT_TYPE_NAME
         photo_event_type = EventType.objects.get(name=SOCIAL_GROUP_PHOTO_EVENT_TYPE_NAME)
-        cache.set('SOCIAL_NETWORK_COMMENT_EVENT_TYPE', photo_event_type)
+        cache.set('SOCIAL_NETWORK_PHOTO_EVENT_TYPE', photo_event_type)
         return photo_event_type
     except ObjectDoesNotExist as e:
         pass  # TODO Log this
