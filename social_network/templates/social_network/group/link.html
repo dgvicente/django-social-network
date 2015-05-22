@@ -1,0 +1,35 @@
+{% load i18n %}
+{% load static %}
+{% load widget_tweaks %}
+
+<form id="modal_group_link_form" action="{% url 'social_group_link_create' group=group %}" method="post" >
+    {% csrf_token %}
+    {% render_field form.creator %}
+    {% render_field form.group %}
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-comment fa-lg"></i> {% trans 'Share Link' %}</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        {% trans "Write your link here..." as linkValuePH %}
+                        {% render_field form.url class="input-block-level form-control required" placeholder=linkValuePH %}
+                        {% include "social_network/errors/_error_list.html" with errors=form.url.errors %}
+                    </div>
+                    <div class="form-group">
+                        {% trans "Write your comment here..." as commentValuePH %}
+                        {% render_field form.comment rows=5 class="input-block-level form-control required" placeholder=commentValuePH %}
+                        {% include "social_network/errors/_error_list.html" with errors=form.comment.errors %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-icon btn-default glyphicons circle_remove"
+                       data-dismiss="modal"><i></i>{% trans 'Cancel' %}</a>
+                    <a id="btn_dialog_ok" href="#"
+                       class="btn btn-icon btn-primary glyphicons circle_ok submit-modal-form"><i></i>{% trans 'Send' %}</a>
+                </div>
+            </div>
+        </div>
+</form>

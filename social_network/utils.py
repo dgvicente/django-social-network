@@ -26,6 +26,19 @@ def group_comment_event_type():
         pass  # TODO Log this
 
 
+def group_shared_link_event_type():
+    shared_link = cache.get('SOCIAL_NETWORK_SHARED_LINK_EVENT_TYPE')
+    if shared_link is not None:
+        return shared_link
+    try:
+        from . import SOCIAL_GROUP_SHARED_LINK_EVENT_TYPE_NAME
+        shared_link = EventType.objects.get(name=SOCIAL_GROUP_SHARED_LINK_EVENT_TYPE_NAME)
+        cache.set('SOCIAL_NETWORK_SHARED_LINK_EVENT_TYPE', shared_link)
+        return shared_link
+    except ObjectDoesNotExist as e:
+        pass  # TODO Log this
+
+
 def group_photo_event_type():
     photo_event_type = cache.get('SOCIAL_NETWORK_PHOTO_EVENT_TYPE')
     if photo_event_type is not None:
