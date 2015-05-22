@@ -17,9 +17,9 @@ from .signals import (
     social_group_membership_request_created,
     social_group_photo_created,
     social_group_comment_created,
-    feed_comment_created
-)
-from .utils import integrated_by_edge, member_of_edge, generate_sha1, group_comment_event_type, group_photo_event_type
+    feed_comment_created,
+    social_group_shared_link_created)
+from .utils import integrated_by_edge, member_of_edge, generate_sha1, group_comment_event_type, group_photo_event_type, group_shared_link_event_type
 
 User = get_user_model()
 graph = Graph()
@@ -281,6 +281,25 @@ def post_save_group_comment(sender, instance, created, **kwargs):
 def social_network_group_comment(instance, user, **kwargs):
     from notifications import create_event
     create_event(user, group_comment_event_type(), instance, _(u'A comment has been posted in a group'))
+
+
+class GroupSharedLink(GroupPost):
+    url = models.URLField()
+
+    class Meta:
+        app_label = 'social_network'
+
+
+@receiver(post_save, sender=GroupSharedLink, dispatch_uid='post_save_group_shared_link')
+def post_save_group_shared_link(sender, instance, created, **kwargs):
+    if created:
+        social_group_shared_link_created.send(sender=GroupSharedLink, user=instance.creator, instance=instance)
+
+
+@receiver(social_group_shared_link_created, sender=GroupSharedLink)
+def social_network_group_shared_link(instance, user, **kwargs):
+    from notifications import create_event
+    create_event(user, group_shared_link_event_type(), instance, _(u'A link has been shared in a group'))
 
 
 class GroupImage(GroupPost):

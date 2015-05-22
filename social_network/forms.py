@@ -1,15 +1,15 @@
 # coding=utf-8
 from django import forms
-from . import Manager
 from django.core.exceptions import ValidationError
-from .models import (
+from . import Manager
+from models import (
     FriendRequest, 
     SocialGroup, 
     GroupComment, 
     GroupMembershipRequest, 
     GroupImage, 
-    FeedComment
-)
+    FeedComment,
+    GroupSharedLink)
 
 
 class FriendRequestForm(forms.ModelForm):
@@ -33,32 +33,35 @@ class SocialGroupForm(forms.ModelForm):
         }
 
 
-class GroupCommentForm(forms.ModelForm):
-    class Meta:
+class GroupPostForm(forms.ModelForm):
+
+    class Meta(object):
+        widgets = {
+            'creator': forms.widgets.HiddenInput,
+            'group': forms.widgets.HiddenInput
+        }
+
+    def clean(self):
+        if not self.cleaned_data['group'].has_member(self.cleaned_data['creator']):
+            raise ValidationError("Only members can post in groups")
+        return self.cleaned_data
+
+
+class GroupCommentForm(GroupPostForm):
+
+    class Meta(GroupPostForm.Meta):
         model = GroupComment
-        widgets = {
-            'creator': forms.widgets.HiddenInput,
-            'group': forms.widgets.HiddenInput
-        }
-
-    def clean(self):
-        if not self.cleaned_data['group'].has_member(self.cleaned_data['creator']):
-            raise ValidationError("Only members can post in groups")
-        return self.cleaned_data
 
 
-class GroupPhotoForm(forms.ModelForm):
-    class Meta:
+class GroupSharedLinkForm(GroupPostForm):
+    class Meta(GroupPostForm.Meta):
+        model = GroupSharedLink
+
+
+class GroupPhotoForm(GroupPostForm):
+
+    class Meta(GroupPostForm.Meta):
         model = GroupImage
-        widgets = {
-            'creator': forms.widgets.HiddenInput,
-            'group': forms.widgets.HiddenInput
-        }
-
-    def clean(self):
-        if not self.cleaned_data['group'].has_member(self.cleaned_data['creator']):
-            raise ValidationError("Only members can post in groups")
-        return self.cleaned_data
 
 
 class GroupMembershipRequestForm(forms.ModelForm):

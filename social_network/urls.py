@@ -31,7 +31,7 @@ from .views import (
     FollowerRelationshipToggleView,
     FollowerRelationshipCreateView,
     FollowerRelationshipDestroyView,
-)
+    BaseGroupLinkCreateView, GroupLinkCreateView)
 
 urlpatterns = patterns(
     '',
@@ -81,6 +81,18 @@ urlpatterns = patterns(
         r'^group/(?P<group>\d+)/comment/ajax/$',
         login_required(GroupCommentCreateView.as_view()),
         name='social_group_comment_create_ajax'
+    ),
+
+    url(
+        r'^group/(?P<group>\d+)/link/$',
+        login_required(BaseGroupLinkCreateView.as_view()),
+        name='social_group_link_create'
+    ),
+
+    url(
+        r'^group/(?P<group>\d+)/link/ajax/$',
+        login_required(GroupLinkCreateView.as_view()),
+        name='social_group_link_create_ajax'
     ),
 
     url(

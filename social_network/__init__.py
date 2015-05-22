@@ -25,6 +25,7 @@ Manager = User._default_manager
 graph = Graph()
 
 SOCIAL_GROUP_COMMENT_EVENT_TYPE_NAME = 'social_group_comment'
+SOCIAL_GROUP_SHARED_LINK_EVENT_TYPE_NAME = 'social_group_shared_link'
 SOCIAL_GROUP_PHOTO_EVENT_TYPE_NAME = 'social_group_photo'
 SERVER_SUCCESS_MESSAGE = _(u"Your request has been successfully processed.")
 SERVER_ERROR_MESSAGE = _(u"An error has occurred while processing your request'.")
