@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.http.response import HttpResponseBadRequest
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import CreateView, ListView, View, DetailView, TemplateView
+from django.views.generic import CreateView, ListView, View, DetailView, TemplateView, UpdateView
 from . import SERVER_SUCCESS_MESSAGE, User, Manager, SERVER_ERROR_MESSAGE
 from utils import intmin
 from models import FriendRequest, SocialGroup, GroupMembershipRequest, GroupFeedItem
@@ -159,6 +159,31 @@ class BaseSocialGroupCreateView(CreateView):
 
 
 class SocialGroupCreateView(JSONResponseEnabledMixin, BaseSocialGroupCreateView):
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.render_to_json({
+            'result': True,
+            'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
+        }, status=201)
+
+
+class BaseSocialGroupUpdateView(UpdateView):
+    queryset = SocialGroup.on_site.all()
+    pk_url_kwarg = 'group'
+    form_class = SocialGroupForm
+    template_name = 'social_network/group/form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super(BaseSocialGroupUpdateView, self).get_form_kwargs()
+        kwargs['initial'] = {
+            'creator': self.request.user,
+            'site': Site.objects.get_current()
+        }
+        return kwargs
+
+
+class SocialGroupUpdateView(JSONResponseEnabledMixin, BaseSocialGroupUpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
