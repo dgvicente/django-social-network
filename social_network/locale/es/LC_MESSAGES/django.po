@@ -103,7 +103,7 @@ msgstr ""
 
 #: views.py:219
 msgid "Solicitud Enviada"
-msgstr "Request Sent"
+msgstr "Solicitud Enviada"
 
 #: views.py:418
 msgid "Follow"

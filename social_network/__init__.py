@@ -25,6 +25,7 @@ Manager = User._default_manager
 graph = Graph()
 
 SOCIAL_GROUP_COMMENT_EVENT_TYPE_NAME = 'social_group_comment'
+SOCIAL_GROUP_SHARED_LINK_EVENT_TYPE_NAME = 'social_group_shared_link'
 SOCIAL_GROUP_PHOTO_EVENT_TYPE_NAME = 'social_group_photo'
 SERVER_SUCCESS_MESSAGE = _(u"Your request has been successfully processed.")
 SERVER_ERROR_MESSAGE = _(u"An error has occurred while processing your request'.")
@@ -32,8 +33,7 @@ SERVER_ERROR_MESSAGE = _(u"An error has occurred while processing your request'.
 
 ##---------------------------------Inject functionality to Django User model---------------------------###
 def get_site(self):
-    profile = getattr(self, 'profile', None)
-    return getattr(profile, 'site', Site.objects.get_current()) if profile else Site.objects.get_current()
+    return Site.objects.get_current()
 
 setattr(User, 'get_site', get_site)
 

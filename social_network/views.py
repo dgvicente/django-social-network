@@ -5,18 +5,18 @@ from django.http import HttpResponse
 from django.http.response import HttpResponseBadRequest
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import CreateView, ListView, View, DetailView, TemplateView
+from django.views.generic import CreateView, ListView, View, DetailView, TemplateView, UpdateView
 from . import SERVER_SUCCESS_MESSAGE, User, Manager, SERVER_ERROR_MESSAGE
-from .utils import intmin
-from .models import FriendRequest, SocialGroup, GroupMembershipRequest, GroupFeedItem
-from .forms import (
+from utils import intmin
+from models import FriendRequest, SocialGroup, GroupMembershipRequest, GroupFeedItem
+from forms import (
     FriendRequestForm,
     SocialGroupForm,
     GroupCommentForm,
     GroupMembershipRequestForm,
     GroupPhotoForm,
-    FeedCommentForm
-)
+    FeedCommentForm,
+    GroupSharedLinkForm)
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +168,31 @@ class SocialGroupCreateView(JSONResponseEnabledMixin, BaseSocialGroupCreateView)
         }, status=201)
 
 
+class BaseSocialGroupUpdateView(UpdateView):
+    queryset = SocialGroup.on_site.all()
+    pk_url_kwarg = 'group'
+    form_class = SocialGroupForm
+    template_name = 'social_network/group/form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super(BaseSocialGroupUpdateView, self).get_form_kwargs()
+        kwargs['initial'] = {
+            'creator': self.request.user,
+            'site': Site.objects.get_current()
+        }
+        return kwargs
+
+
+class SocialGroupUpdateView(JSONResponseEnabledMixin, BaseSocialGroupUpdateView):
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.render_to_json({
+            'result': True,
+            'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
+        }, status=201)
+
+
 class SocialGroupUserList(ListView):
     template_name = 'social_network/group/list/main.html'
 
@@ -262,64 +287,59 @@ class SocialGroupJoinView(JSONResponseEnabledMixin, View):
             return HttpResponseBadRequest()
 
 
-class BaseGroupCommentCreateView(CreateView):
+class BaseGroupPostCreateView(CreateView):
+
+    def get_context_data(self, **kwargs):
+        context = super(BaseGroupPostCreateView, self).get_context_data(**kwargs)
+        context.update({
+            'group': self.kwargs['group']
+        })
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(BaseGroupPostCreateView, self).get_form_kwargs()
+        kwargs['initial'] = {
+            'creator': self.request.user,
+            'group': SocialGroup.objects.get(pk=self.kwargs['group']),
+        }
+        return kwargs
+
+
+class GroupPostCreateView(JSONResponseEnabledMixin):
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.render_to_json({
+            'result': True,
+            'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
+        }, status=201)
+
+
+class BaseGroupCommentCreateView(BaseGroupPostCreateView):
     form_class = GroupCommentForm
     template_name = 'social_network/group/comment.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(BaseGroupCommentCreateView, self).get_context_data(**kwargs)
-        context.update({
-            'group': self.kwargs['group']
-        })
-        return context
 
-    def get_form_kwargs(self):
-        kwargs = super(BaseGroupCommentCreateView, self).get_form_kwargs()
-        kwargs['initial'] = {
-            'creator': self.request.user,
-            'group': SocialGroup.objects.get(pk=self.kwargs['group']),
-        }
-        return kwargs
+class GroupCommentCreateView(GroupPostCreateView, BaseGroupCommentCreateView):
+    pass
 
 
-class GroupCommentCreateView(JSONResponseEnabledMixin, BaseGroupCommentCreateView):
-
-    def form_valid(self, form):
-        self.object = form.save()
-        return self.render_to_json({
-            'result': True,
-            'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }, status=201)
+class BaseGroupLinkCreateView(BaseGroupPostCreateView):
+    form_class = GroupSharedLinkForm
+    template_name = 'social_network/group/link.html'
 
 
-class BaseGroupPhotoCreateView(CreateView):
+class GroupLinkCreateView(GroupPostCreateView, BaseGroupLinkCreateView):
+    pass
+
+
+class BaseGroupPhotoCreateView(BaseGroupPostCreateView):
     form_class = GroupPhotoForm
     template_name = 'social_network/group/photo.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(BaseGroupPhotoCreateView, self).get_context_data(**kwargs)
-        context.update({
-            'group': self.kwargs['group']
-        })
-        return context
 
-    def get_form_kwargs(self):
-        kwargs = super(BaseGroupPhotoCreateView, self).get_form_kwargs()
-        kwargs['initial'] = {
-            'creator': self.request.user,
-            'group': SocialGroup.objects.get(pk=self.kwargs['group']),
-        }
-        return kwargs
-
-
-class GroupPhotoCreateView(JSONResponseEnabledMixin, BaseGroupPhotoCreateView):
-
-    def form_valid(self, form):
-        self.object = form.save()
-        return self.render_to_json({
-            'result': True,
-            'successMsg': force_text(SERVER_SUCCESS_MESSAGE)
-        }, status=201)
+class GroupPhotoCreateView(GroupPostCreateView, BaseGroupPhotoCreateView):
+    pass
 
 
 class SocialGroupFeedView(ListView):
